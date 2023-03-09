@@ -4,13 +4,17 @@
 TFT_eSPI tft = TFT_eSPI();
 
 // Set up variables for the cursor and counter. Cursor starts in the middle of the screen.
-int paddleX = 50;
-int paddleY = 0;
-int oldPaddleX, oldPaddleY;
+int paddle1X = 50;
+int paddle1Y= 0;
+int oldPaddle1Y;
+int paddle2X = 430;
+int paddle2Y = 0;
+int oldPaddle2Y;
+
 int ballDirectionX = 1;
 int ballDirectionY = 1;
 int ballX, ballY, oldBallX, oldBallY;
-int ballSpeed = 10; // lower numbers are faster
+int ballSpeed = 1; // lower numbers are faster
 int width = 10;
 int height = 40;
 int player1;
@@ -30,6 +34,8 @@ int player2;
 #define JOYSTICK_X_PIN A14
 #define JOYSTICK_Y_PIN A15
 #define JOYSTICK_BUTTON_PIN 23
+#define Left_Button 3
+#define Right_Button 4
 
 
 void setup() {
@@ -46,22 +52,47 @@ void loop() {
   int myWidth = tft.width();
   int myHeight = tft.height();
 
-  paddleY = paddleY + map(analogRead(A15), 0, 1023, -1, 1);
+  //2345 digital
 
-  if (0 >= paddleY)
-    paddleY = 0;
+  paddle1Y = paddle1Y + map(analogRead(A15), 0, 1023, -1, 1);
 
-  if (280 <= (paddleY))
-    paddleY = 280;
+  if (0 >= paddle1Y)
+    paddle1Y = 0;
 
-  if (oldPaddleY != paddleY) {
-    tft.fillRect(oldPaddleX, oldPaddleY, width, height, BLACK);
+  if (280 <= (paddle1Y))
+    paddle1Y = 280;
+
+  if (oldPaddle1Y != paddle1Y) {
+    tft.drawRect(paddle1X, oldPaddle1Y, width, height, BLACK);
+  }
+  else{
+    delay(1);
   }
 
-  tft.fillRect(paddleX, paddleY, width, height, WHITE);
+  tft.drawRect(paddle1X, paddle1Y, width, height, WHITE);
 
-  oldPaddleX = paddleX;
-  oldPaddleY = paddleY;
+  oldPaddle1Y = paddle1Y;
+
+/////////////////////////////////////////////////
+  paddle2Y = paddle2Y + map(digitalRead(3), LOW, HIGH, 0, 1) + map(digitalRead(4), LOW, HIGH, 0, -1);
+
+  if (0 >= paddle2Y)
+    paddle2Y = 0;
+
+  if (280 <= paddle2Y)
+    paddle2Y = 280;
+
+  if (oldPaddle2Y != paddle2Y) {
+    tft.drawRect(paddle2X, oldPaddle2Y, width, height, BLACK);
+  }
+  else{
+    delay(1);
+  }
+
+  tft.drawRect(paddle2X, paddle2Y, width, height, WHITE);
+
+  oldPaddle2Y = paddle2Y;
+/////////////////////////////////////////////
 
   // update the ball's position and draw it on screen
   if (millis() % ballSpeed < 2) {
@@ -87,7 +118,16 @@ void moveBall() {
 
   }
 
-  if (inPaddle(ballX, ballY, paddleX, paddleY, width, height)) {
+  if (ballX > tft.width() || ballX < 0) {
+    ballDirectionX = -ballDirectionX;
+  }
+
+  if (inPaddle(ballX, ballY, paddle1X, paddle1Y, width, height)) {
+
+    ballDirectionX = -ballDirectionX;
+    
+  }
+  if (inPaddle(ballX, ballY, paddle2X, paddle2Y, width, height)) {
 
     ballDirectionX = -ballDirectionX;
 
@@ -98,11 +138,11 @@ void moveBall() {
 
   if (oldBallX != ballX || oldBallY != ballY) {
 
-    tft.fillCircle(oldBallX, oldBallY, 5, BLACK);
+    tft.drawCircle(oldBallX, oldBallY, 5, BLACK);
 
   }
 
-  tft.fillCircle(ballX, ballY, 5, WHITE);
+  tft.drawCircle(ballX, ballY, 5, WHITE);
 
   oldBallX = ballX;
 
